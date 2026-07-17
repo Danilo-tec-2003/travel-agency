@@ -1,0 +1,17 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: travel-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  postgres:
+    image: postgres:16
+    container_name: travel-postgres
+    environment:
+      POSTGRES_DB: travel_booking_db
+      POSTGRES_USER: travel
+      POSTGRES_PASSWORD: travel
+    ports:
+      - "5433:5432"

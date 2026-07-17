@@ -1,0 +1,36 @@
+# IDEs
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+
+# Java/Spring build outputs
+**/target/
+**/build/
+**/.apt_generated/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.springBeans
+**/.sts4-cache/
+
+# Maven wrapper binary generated locally
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Spring Initializr helper files
+**/HELP.md
+
+# Logs
+*.log
+logs/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
