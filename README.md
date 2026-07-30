@@ -21,7 +21,7 @@ Estudar, de forma pequena e pratica:
 | --- | ---: | --- |
 | `booking-service` | `8081` | API REST, banco de reservas, publica e consome eventos |
 | `reservation-service` | `8082` | Consome pedido de reserva e publica sucesso ou falha |
-| `notification-service` | `8083` | Consome confirmacao/cancelamento e simula envio de e-mail |
+| `notification-service` | `8084` | Consome confirmacao/cancelamento e simula envio de e-mail |
 
 ## Infraestrutura
 
