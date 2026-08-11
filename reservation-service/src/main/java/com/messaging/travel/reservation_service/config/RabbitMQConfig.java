@@ -18,6 +18,10 @@ public class RabbitMQConfig {
 
     public static final String BOOKING_CREATED_ROUTING_KEY = "booking.created";
 
+    public static final String BOOKING_RESERVED_ROUTING_KEY = "booking.reserved";
+
+    public static final String BOOKING_FAILED_ROUTING_KEY = "booking.failed";
+
     @Bean
     public TopicExchange travelExchange() {
         return new TopicExchange(TRAVEL_EXCHANGE);
