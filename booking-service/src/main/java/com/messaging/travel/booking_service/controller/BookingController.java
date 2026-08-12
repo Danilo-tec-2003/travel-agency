@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
@@ -19,5 +22,15 @@ public class BookingController {
     @ResponseStatus(HttpStatus.CREATED)
     public Booking create(@RequestBody @Valid CreateBookingRequest request) {
         return bookingService.create(request);
+    }
+
+    @GetMapping
+    public List<Booking> findAll() {
+        return bookingService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Booking findById(@PathVariable UUID id) {
+        return bookingService.findById(id);
     }
 }

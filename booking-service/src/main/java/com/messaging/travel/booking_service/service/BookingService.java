@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -79,4 +80,14 @@ public class BookingService {
                 event
         );
     }
+
+    public List<Booking> findAll() {
+        return bookingRepository.findAll();
+    }
+
+    public Booking findById(UUID id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found: " + id));
+    }
+
 }
