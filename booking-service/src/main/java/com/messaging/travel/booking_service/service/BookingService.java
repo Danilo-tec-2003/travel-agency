@@ -6,6 +6,7 @@ import com.messaging.travel.booking_service.domain.BookingStatus;
 import com.messaging.travel.booking_service.dto.CreateBookingRequest;
 import com.messaging.travel.booking_service.event.BookingCreatedEvent;
 import com.messaging.travel.booking_service.event.BookingStatusChangedEvent;
+import com.messaging.travel.booking_service.exception.BookingNotFoundException;
 import com.messaging.travel.booking_service.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -49,7 +50,7 @@ public class BookingService {
 
     public void updateStatusFromResult(UUID bookingId, String status, String message) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found: " + bookingId));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found: " + bookingId));
 
         if ("RESERVED".equals(status)) {
             booking.setStatus(BookingStatus.CONFIRMED);
@@ -87,7 +88,7 @@ public class BookingService {
 
     public Booking findById(UUID id) {
         return bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found: " + id));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found: " + id));
     }
 
 }
