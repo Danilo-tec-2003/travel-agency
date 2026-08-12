@@ -24,6 +24,8 @@ public class RabbitMQConfig {
     public static final String BOOKING_RESULT_QUEUE = "booking-result.queue";
     public static final String BOOKING_RESERVED_ROUTING_KEY = "booking.reserved";
     public static final String BOOKING_FAILED_ROUTING_KEY = "booking.failed";
+    public static final String BOOKING_CONFIRMED_ROUTING_KEY = "booking.confirmed";
+    public static final String BOOKING_CANCELLED_ROUTING_KEY = "booking.cancelled";
 
     @Bean
     public TopicExchange travelExchange() {
