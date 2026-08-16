@@ -1,67 +1,49 @@
 # Travel Agency Microservices
 
-Mini projeto de estudos para entender mensageria com RabbitMQ usando Spring Boot.
+Mini projeto de estudos com Spring Boot e RabbitMQ, simulando o fluxo assincrono de uma agencia de viagens.
 
-O sistema simula uma agencia de viagens simples. O cliente cria uma reserva, um servico processa a reserva do pacote e outro servico simula o envio de notificacao.
+O objetivo e demonstrar, de forma simples e bem delimitada, comunicacao entre microservicos, mensageria, persistencia, validacoes, tratamento de erros e idempotencia.
 
-## Objetivo
-
-Estudar, de forma pequena e pratica:
-
-- producer e consumer
-- exchange, queue, binding e routing key
-- comunicacao assincrona entre servicos
-- evento de resposta
-- consistencia eventual
-- fluxo simples de sucesso e falha
-
-## Servicos
+## Arquitetura
 
 | Servico | Porta | Responsabilidade |
 | --- | ---: | --- |
-| `booking-service` | `8081` | API REST, banco de reservas, publica e consome eventos |
-| `reservation-service` | `8082` | Consome pedido de reserva e publica sucesso ou falha |
-| `notification-service` | `8084` | Consome confirmacao/cancelamento e simula envio de e-mail |
+| `booking-service` | `8081` | API REST, persiste reservas, publica eventos e processa resultados |
+| `reservation-service` | `8082` | Consome reservas criadas e simula confirmacao ou falha |
+| `notification-service` | `8084` | Consome status final e simula envio de email por log |
 
-## Infraestrutura
+Infraestrutura local:
 
-O arquivo `docker-compose.yml` sobe:
-
-| Recurso | Porta local | Uso |
+| Recurso | Porta | Uso |
 | --- | ---: | --- |
 | RabbitMQ | `5672` | Broker AMQP |
-| RabbitMQ Management | `15672` | Painel web do RabbitMQ |
+| RabbitMQ Management | `15672` | Interface web |
 | PostgreSQL | `5433` | Banco do `booking-service` |
 
 Credenciais locais:
 
 ```text
-RabbitMQ
-user: guest
-password: guest
-
-PostgreSQL
-database: travel_booking_db
-user: travel
-password: travel
+RabbitMQ: guest / guest
+PostgreSQL: travel / travel
+Database: travel_booking_db
 ```
 
-## Fluxo Planejado
+## Fluxo
 
 ```text
-1. Cliente cria reserva no booking-service
+1. Cliente cria uma reserva em POST /bookings
 2. booking-service salva a reserva como PENDING
-3. booking-service publica booking.created
-4. reservation-service consome booking.created
-5. reservation-service simula a reserva do pacote
-6. reservation-service publica booking.reserved ou booking.failed
+3. booking-service publica BookingCreatedEvent
+4. reservation-service consome o evento
+5. reservation-service simula o processamento da reserva
+6. reservation-service publica BookingResultEvent
 7. booking-service consome o resultado
 8. booking-service atualiza para CONFIRMED ou CANCELLED
-9. booking-service publica booking.confirmed ou booking.cancelled
-10. notification-service consome o evento final e registra o envio da notificacao
+9. booking-service publica BookingStatusChangedEvent
+10. notification-service consome o evento final e registra a notificacao
 ```
 
-## Topologia RabbitMQ Planejada
+## RabbitMQ
 
 Exchange:
 
@@ -87,14 +69,71 @@ booking.confirmed
 booking.cancelled
 ```
 
-Bindings:
+## API
+
+Base URL:
 
 ```text
-reservation.queue    <- booking.created
-booking-result.queue <- booking.reserved
-booking-result.queue <- booking.failed
-notification.queue   <- booking.confirmed
-notification.queue   <- booking.cancelled
+http://localhost:8081
+```
+
+Criar reserva:
+
+```http
+POST /bookings
+```
+
+```json
+{
+  "customerName": "Danilo Silva",
+  "destination": "Recife",
+  "travelers": 2
+}
+```
+
+Listar reservas:
+
+```http
+GET /bookings
+```
+
+Buscar reserva por id:
+
+```http
+GET /bookings/{id}
+```
+
+## Qualidade da API
+
+O `booking-service` possui:
+
+- DTO de entrada: `CreateBookingRequest`
+- DTO de saida: `BookingResponse`
+- validacao de campos obrigatorios, tamanho e quantidade de viajantes
+- tratamento global de erros
+- resposta `404` para reserva inexistente
+- resposta `400` para UUID invalido, JSON malformado e erros de validacao
+
+## Idempotencia
+
+O `booking-service` possui controle de idempotencia ao consumir `BookingResultEvent`.
+
+Quando um resultado de reserva chega:
+
+```text
+1. verifica se o eventId ja existe em processed_events
+2. se existir, ignora o evento duplicado
+3. se nao existir, atualiza o booking
+4. publica o evento de status alterado
+5. registra o eventId como processado
+```
+
+A tabela usada para controle:
+
+```sql
+SELECT *
+FROM processed_events
+ORDER BY processed_at DESC;
 ```
 
 ## Como Rodar
@@ -105,13 +144,7 @@ Subir RabbitMQ e PostgreSQL:
 docker compose up -d
 ```
 
-Acessar o painel do RabbitMQ:
-
-```text
-http://localhost:15672
-```
-
-Rodar os servicos, em terminais separados:
+Rodar os servicos em terminais separados:
 
 ```bash
 cd booking-service
@@ -128,16 +161,26 @@ cd notification-service
 ./mvnw spring-boot:run
 ```
 
-## Estado Atual
+Acessar RabbitMQ Management:
 
-- Estrutura dos tres servicos criada.
-- Docker Compose configurado com RabbitMQ e PostgreSQL.
-- Configuracoes locais de porta, banco e RabbitMQ definidas nos `application.properties`.
+```text
+http://localhost:15672
+```
 
-## Proximos Passos
+## Banco
 
-1. Criar a configuracao RabbitMQ em cada servico.
-2. Criar os DTOs dos eventos.
-3. Criar a entidade `Booking` no `booking-service`.
-4. Criar os endpoints REST do `booking-service`.
-5. Implementar os consumers e producers.
+Consultar reservas:
+
+```sql
+SELECT *
+FROM bookings
+ORDER BY created_at DESC;
+```
+
+Consultar eventos processados:
+
+```sql
+SELECT *
+FROM processed_events
+ORDER BY processed_at DESC;
+```
