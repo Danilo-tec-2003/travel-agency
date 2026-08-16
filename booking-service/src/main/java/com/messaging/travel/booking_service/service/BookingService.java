@@ -3,15 +3,20 @@ package com.messaging.travel.booking_service.service;
 import com.messaging.travel.booking_service.config.RabbitMQConfig;
 import com.messaging.travel.booking_service.domain.Booking;
 import com.messaging.travel.booking_service.domain.BookingStatus;
+import com.messaging.travel.booking_service.domain.ProcessedEvent;
+import com.messaging.travel.booking_service.domain.ProcessedEventType;
 import com.messaging.travel.booking_service.dto.BookingResponse;
 import com.messaging.travel.booking_service.dto.CreateBookingRequest;
 import com.messaging.travel.booking_service.event.BookingCreatedEvent;
+import com.messaging.travel.booking_service.event.BookingResultEvent;
 import com.messaging.travel.booking_service.event.BookingStatusChangedEvent;
 import com.messaging.travel.booking_service.exception.BookingNotFoundException;
 import com.messaging.travel.booking_service.repository.BookingRepository;
+import com.messaging.travel.booking_service.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +27,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final ProcessedEventRepository processedEventRepository;
 
     public BookingResponse create(CreateBookingRequest request) {
         Booking booking = new Booking(
@@ -49,21 +55,27 @@ public class BookingService {
         return toResponse(savedBooking);
     }
 
-    public void updateStatusFromResult(UUID bookingId, String status, String message) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Booking not found: " + bookingId));
+    @Transactional
+    public void processBookingResult(BookingResultEvent bookingResultEvent) {
+        if (processedEventRepository.existsByEventId(bookingResultEvent.eventId())) {
+            System.out.println("Duplicate booking result event ignored. Event ID: " + bookingResultEvent.eventId());
+            return;
+        }
 
-        if ("RESERVED".equals(status)) {
+        Booking booking = bookingRepository.findById(bookingResultEvent.bookingId())
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found: " + bookingResultEvent.bookingId()));
+
+        if ("RESERVED".equals(bookingResultEvent.status())) {
             booking.setStatus(BookingStatus.CONFIRMED);
         } else {
             booking.setStatus(BookingStatus.CANCELLED);
         }
 
-        booking.setMessage(message);
+        booking.setMessage(bookingResultEvent.message());
 
         bookingRepository.save(booking);
 
-        BookingStatusChangedEvent event = new BookingStatusChangedEvent(
+        BookingStatusChangedEvent statusChangedEvent = new BookingStatusChangedEvent(
                 UUID.randomUUID(),
                 booking.getId(),
                 booking.getCustomerName(),
@@ -79,8 +91,15 @@ public class BookingService {
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.TRAVEL_EXCHANGE,
                 routingKey,
-                event
+                statusChangedEvent
         );
+
+        ProcessedEvent processedEvent = new ProcessedEvent(
+                bookingResultEvent.eventId(),
+                ProcessedEventType.BOOKING_RESULT
+        );
+
+        processedEventRepository.save(processedEvent);
     }
 
     public List<BookingResponse> findAll() {

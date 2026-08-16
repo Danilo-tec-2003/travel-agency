@@ -1,7 +1,6 @@
 package com.messaging.travel.booking_service.listener;
 
 import com.messaging.travel.booking_service.config.RabbitMQConfig;
-import com.messaging.travel.booking_service.domain.Booking;
 import com.messaging.travel.booking_service.event.BookingResultEvent;
 import com.messaging.travel.booking_service.service.BookingService;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +21,7 @@ public class BookingResultListener {
         System.out.println("Status: " + event.status());
         System.out.println("Message: " + event.message());
 
-        bookingService.updateStatusFromResult(
-                event.bookingId(),
-                event.status(),
-                event.message()
-        );
+        bookingService.processBookingResult(event);
     }
 
 }
