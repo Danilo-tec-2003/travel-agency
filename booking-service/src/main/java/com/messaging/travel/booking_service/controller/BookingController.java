@@ -1,6 +1,6 @@
 package com.messaging.travel.booking_service.controller;
 
-import com.messaging.travel.booking_service.domain.Booking;
+import com.messaging.travel.booking_service.dto.BookingResponse;
 import com.messaging.travel.booking_service.dto.CreateBookingRequest;
 import com.messaging.travel.booking_service.service.BookingService;
 import jakarta.validation.Valid;
@@ -20,17 +20,17 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Booking create(@RequestBody @Valid CreateBookingRequest request) {
+    public BookingResponse create(@RequestBody @Valid CreateBookingRequest request) {
         return bookingService.create(request);
     }
 
     @GetMapping
-    public List<Booking> findAll() {
+    public List<BookingResponse> findAll() {
         return bookingService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Booking findById(@PathVariable UUID id) {
+    public BookingResponse findById(@PathVariable UUID id) {
         return bookingService.findById(id);
     }
 }

@@ -3,6 +3,7 @@ package com.messaging.travel.booking_service.service;
 import com.messaging.travel.booking_service.config.RabbitMQConfig;
 import com.messaging.travel.booking_service.domain.Booking;
 import com.messaging.travel.booking_service.domain.BookingStatus;
+import com.messaging.travel.booking_service.dto.BookingResponse;
 import com.messaging.travel.booking_service.dto.CreateBookingRequest;
 import com.messaging.travel.booking_service.event.BookingCreatedEvent;
 import com.messaging.travel.booking_service.event.BookingStatusChangedEvent;
@@ -22,7 +23,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RabbitTemplate rabbitTemplate;
 
-    public Booking create(CreateBookingRequest request) {
+    public BookingResponse create(CreateBookingRequest request) {
         Booking booking = new Booking(
                 request.customerName(),
                 request.destination(),
@@ -45,7 +46,7 @@ public class BookingService {
                 event
         );
 
-        return savedBooking;
+        return toResponse(savedBooking);
     }
 
     public void updateStatusFromResult(UUID bookingId, String status, String message) {
@@ -82,13 +83,31 @@ public class BookingService {
         );
     }
 
-    public List<Booking> findAll() {
-        return bookingRepository.findAll();
+    public List<BookingResponse> findAll() {
+        return bookingRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public Booking findById(UUID id) {
-        return bookingRepository.findById(id)
+    public BookingResponse findById(UUID id) {
+        Booking booking =  bookingRepository.findById(id)
                 .orElseThrow(() -> new BookingNotFoundException("Booking not found: " + id));
+
+        return toResponse(booking);
+    }
+
+    private BookingResponse toResponse(Booking booking) {
+        return new BookingResponse(
+                booking.getId(),
+                booking.getCustomerName(),
+                booking.getDestination(),
+                booking.getTravelers(),
+                booking.getStatus().name(),
+                booking.getMessage(),
+                booking.getCreatedAt(),
+                booking.getUpdatedAt()
+        );
     }
 
 }
