@@ -14,6 +14,7 @@ import com.messaging.travel.booking_service.exception.BookingNotFoundException;
 import com.messaging.travel.booking_service.repository.BookingRepository;
 import com.messaging.travel.booking_service.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingService {
 
     private final BookingRepository bookingRepository;
@@ -52,13 +54,24 @@ public class BookingService {
                 event
         );
 
+        log.info(
+                "Booking created and event published. bookingId={}, eventId={}, routingKey={}",
+                savedBooking.getId(),
+                event.eventId(),
+                "booking.created"
+        );
+
         return toResponse(savedBooking);
     }
 
     @Transactional
     public void processBookingResult(BookingResultEvent bookingResultEvent) {
         if (processedEventRepository.existsByEventId(bookingResultEvent.eventId())) {
-            System.out.println("Duplicate booking result event ignored. Event ID: " + bookingResultEvent.eventId());
+            log.info(
+                    "Duplicate booking result event ignored. eventId={}, bookingId={}",
+                    bookingResultEvent.eventId(),
+                    bookingResultEvent.bookingId()
+            );
             return;
         }
 
@@ -94,12 +107,27 @@ public class BookingService {
                 statusChangedEvent
         );
 
+        log.info(
+                "Booking result processed and status event published. bookingId={}, resultEventId={}, statusEventId={}, status={}, routingKey={}",
+                booking.getId(),
+                bookingResultEvent.eventId(),
+                statusChangedEvent.eventId(),
+                booking.getStatus(),
+                routingKey
+        );
+
         ProcessedEvent processedEvent = new ProcessedEvent(
                 bookingResultEvent.eventId(),
                 ProcessedEventType.BOOKING_RESULT
         );
 
         processedEventRepository.save(processedEvent);
+
+        log.info(
+                "Booking result event marked as processed. eventId={}, bookingId={}",
+                bookingResultEvent.eventId(),
+                bookingResultEvent.bookingId()
+        );
     }
 
     public List<BookingResponse> findAll() {
