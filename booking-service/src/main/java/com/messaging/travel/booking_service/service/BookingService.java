@@ -34,6 +34,7 @@ public class BookingService {
     public BookingResponse create(CreateBookingRequest request) {
         Booking booking = new Booking(
                 request.customerName(),
+                request.customerEmail(),
                 request.destination(),
                 request.travelers()
         );
@@ -44,6 +45,7 @@ public class BookingService {
                 UUID.randomUUID(),
                 savedBooking.getId(),
                 savedBooking.getCustomerName(),
+                savedBooking.getCustomerEmail(),
                 savedBooking.getDestination(),
                 savedBooking.getTravelers()
         );
@@ -92,6 +94,7 @@ public class BookingService {
                 UUID.randomUUID(),
                 booking.getId(),
                 booking.getCustomerName(),
+                booking.getCustomerEmail(),
                 booking.getDestination(),
                 booking.getStatus().name(),
                 booking.getMessage()
@@ -148,6 +151,7 @@ public class BookingService {
         return new BookingResponse(
                 booking.getId(),
                 booking.getCustomerName(),
+                booking.getCustomerEmail(),
                 booking.getDestination(),
                 booking.getTravelers(),
                 booking.getStatus().name(),

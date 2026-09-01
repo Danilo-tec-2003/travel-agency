@@ -26,6 +26,13 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: travel-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   booking-service:
     build:
       context: ./booking-service
@@ -68,10 +75,20 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      APP_MAIL_ENABLED: true
+      APP_MAIL_FROM: no-reply@travel-agency.local
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_SMTP_AUTH: false
+      MAIL_SMTP_STARTTLS: false
     ports:
       - "8084:8084"

@@ -6,6 +6,7 @@ public record BookingCreatedEvent(
         UUID eventId,
         UUID bookingId,
         String customerName,
+        String customerEmail,
         String destination,
         Integer travelers
 ) {

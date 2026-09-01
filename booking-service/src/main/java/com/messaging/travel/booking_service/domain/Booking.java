@@ -26,6 +26,8 @@ public class Booking {
 
     private String customerName;
 
+    private String customerEmail;
+
     private String destination;
 
     private Integer travelers;
@@ -39,9 +41,10 @@ public class Booking {
 
     private LocalDateTime updatedAt;
 
-    public Booking(String customerName, String destination, Integer travelers) {
+    public Booking(String customerName, String customerEmail, String destination, Integer travelers) {
         this.id = UUID.randomUUID();
         this.customerName = customerName;
+        this.customerEmail = customerEmail;
         this.destination = destination;
         this.travelers = travelers;
         this.status = BookingStatus.PENDING;

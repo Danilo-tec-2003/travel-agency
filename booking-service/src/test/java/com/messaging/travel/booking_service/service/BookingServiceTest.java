@@ -46,7 +46,7 @@ public class BookingServiceTest {
 
     @Test
     void shouldCreatePendingBookingAndPublishEvent() {
-        CreateBookingRequest request = new CreateBookingRequest("Danilo", "Recife", 3);
+        CreateBookingRequest request = new CreateBookingRequest("Danilo", "danilo@email.com", "Recife", 3);
 
         when(bookingRepository.save(any(Booking.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -55,6 +55,7 @@ public class BookingServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(response.customerName()).isEqualTo("Danilo");
+        assertThat(response.customerEmail()).isEqualTo("danilo@email.com");
         assertThat(response.destination()).isEqualTo("Recife");
         assertThat(response.travelers()).isEqualTo(3);
         assertThat(response.status()).isEqualTo("PENDING");
@@ -73,6 +74,7 @@ public class BookingServiceTest {
         //Given (Dados)
         UUID id = UUID.randomUUID();
         Booking booking = new Booking("Rebeca",
+                "rebeca@email.com",
                 "Jaboatao",
                 2);
 
@@ -88,6 +90,7 @@ public class BookingServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.id()).isEqualTo(id);
         assertThat(response.customerName()).isEqualTo("Rebeca");
+        assertThat(response.customerEmail()).isEqualTo("rebeca@email.com");
         assertThat(response.destination()).isEqualTo("Jaboatao");
         assertThat(response.travelers()).isEqualTo(2);
         assertThat(response.status()).isEqualTo("CONFIRMED");
@@ -121,7 +124,7 @@ public class BookingServiceTest {
                 "RESERVED",
                 "Reservation confirmed successfully"
         );
-        Booking booking = new Booking("Danilo", "Recife", 2);
+        Booking booking = new Booking("Danilo", "danilo@email.com", "Recife", 2);
         booking.setId(bookingId);
 
         when(processedEventRepository.existsByEventId(eventId)).thenReturn(false);

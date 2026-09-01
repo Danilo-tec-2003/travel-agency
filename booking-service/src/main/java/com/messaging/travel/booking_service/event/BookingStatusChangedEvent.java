@@ -6,6 +6,7 @@ public record BookingStatusChangedEvent(
         UUID eventId,
         UUID bookingId,
         String customerName,
+        String customerEmail,
         String destination,
         String status,
         String message

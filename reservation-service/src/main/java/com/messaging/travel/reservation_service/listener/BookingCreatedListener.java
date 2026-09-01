@@ -21,10 +21,11 @@ public class BookingCreatedListener {
     @RabbitListener(queues = RabbitMQConfig.RESERVATION_QUEUE)
     public void handle(BookingCreatedEvent event) {
         log.info(
-                "Booking created event received. eventId={}, bookingId={}, customerName={}, destination={}, travelers={}",
+                "Booking created event received. eventId={}, bookingId={}, customerName={}, customerEmail={}, destination={}, travelers={}",
                 event.eventId(),
                 event.bookingId(),
                 event.customerName(),
+                event.customerEmail(),
                 event.destination(),
                 event.travelers()
         );
