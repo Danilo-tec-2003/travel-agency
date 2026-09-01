@@ -4,6 +4,7 @@ import com.messaging.travel.reservation_service.config.RabbitMQConfig;
 import com.messaging.travel.reservation_service.event.BookingCreatedEvent;
 import com.messaging.travel.reservation_service.event.BookingResultEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
@@ -12,18 +13,21 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class BookingCreatedListener {
 
     private final RabbitTemplate rabbitTemplate;
 
     @RabbitListener(queues = RabbitMQConfig.RESERVATION_QUEUE)
     public void handle(BookingCreatedEvent event) {
-        System.out.println("Booking created event received:");
-        System.out.println("Event ID: " + event.eventId());
-        System.out.println("Booking ID: " + event.bookingId());
-        System.out.println("Customer: " + event.customerName());
-        System.out.println("Destination: " + event.destination());
-        System.out.println("Travelers: " + event.travelers());
+        log.info(
+                "Booking created event received. eventId={}, bookingId={}, customerName={}, destination={}, travelers={}",
+                event.eventId(),
+                event.bookingId(),
+                event.customerName(),
+                event.destination(),
+                event.travelers()
+        );
 
         BookingResultEvent resultEvent = processReservation(event);
 
@@ -35,6 +39,14 @@ public class BookingCreatedListener {
                 RabbitMQConfig.TRAVEL_EXCHANGE,
                 routingKey,
                 resultEvent
+        );
+
+        log.info(
+                "Booking result event published. eventId={}, bookingId={}, status={}, routingKey={}",
+                resultEvent.eventId(),
+                resultEvent.bookingId(),
+                resultEvent.status(),
+                routingKey
         );
     }
 
