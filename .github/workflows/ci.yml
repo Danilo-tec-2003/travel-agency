@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Run service tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Test booking-service
+        working-directory: booking-service
+        run: ./mvnw test
+
+      - name: Test reservation-service
+        working-directory: reservation-service
+        run: ./mvnw test
+
+      - name: Test notification-service
+        working-directory: notification-service
+        run: ./mvnw test
